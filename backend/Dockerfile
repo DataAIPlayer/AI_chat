@@ -32,7 +32,7 @@ COPY --from=builder /app .
 COPY nginx.conf /etc/nginx/sites-available/default
 
 # 暴露端口
-EXPOSE 80
+EXPOSE 1007
 
 # 启动 Nginx 和 Uvicorn
-CMD ["bash", "-c", "nginx && uvicorn main:app --host 0.0.0.0 --port 9140"]
+CMD ["bash", "-c", "nginx && uvicorn main:app --host 0.0.0.0 --port 9141"]
