@@ -24,7 +24,7 @@ def gpt_chat(mess: List[message]):
     ]
     completion = openai.ChatCompletion.create(
     model = "gpt-3.5-turbo",
-    messages = system_msg + mess
+    messages = system_msg + [{"role": m.sender, "content": m.msg} for m in mess]
     )
     res = {
             "res":completion,
