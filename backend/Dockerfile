@@ -20,6 +20,7 @@ FROM python:3.9-slim
 RUN apt-get update && \
     apt-get install -y nginx && \
     apt-get install -y certbot certbot-nginx && \
+    apt-get install -y gettext && \
     rm -rf /var/lib/apt/lists/*
 
 # 将工作目录设置为 /app
@@ -29,11 +30,11 @@ WORKDIR /app
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /app .
 
-# 复制 Nginx 配置文件
-COPY nginx.conf /etc/nginx/sites-available/default
+# 替换 Nginx 配置文件域名的shell脚本
+RUN chmod +x /app/env_nginx.sh
 
 # 暴露端口
-EXPOSE 1007, 443
+EXPOSE 80, 443
 
 # 启动 Nginx 和 Uvicorn
-CMD ["bash", "-c", "nginx && certbot --nginx --non-interactive --agree-tos -m $certbot_email -d $server_domain && uvicorn main:app --host 0.0.0.0 --port 9141"]
+CMD ["bash", "-c", "/app/env_nginx.sh && nginx && certbot --nginx --non-interactive --agree-tos -m $certbot_email -d $server_domain && uvicorn main:app --host 0.0.0.0 --port 8000"]

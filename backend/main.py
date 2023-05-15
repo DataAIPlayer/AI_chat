@@ -23,7 +23,7 @@ def gpt_chat(mess: List[message]):
         {"role": "system", "content": "你是一位非常有帮助的人类助理"},
     ]
     completion = openai.ChatCompletion.create(
-    model = "gpt-3.5-turbo",
+    model = "gpt-3.5-turbo-0301",
     messages = system_msg + [{"role": m.sender, "content": m.msg} for m in mess]
     )
     res = {
