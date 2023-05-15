@@ -34,7 +34,7 @@ COPY --from=builder /app .
 RUN chmod +x /app/env_nginx.sh
 
 # 暴露端口
-EXPOSE 80, 443
+EXPOSE 80 443
 
 # 启动 Nginx 和 Uvicorn
 CMD ["bash", "-c", "/app/env_nginx.sh && nginx && certbot --nginx --non-interactive --agree-tos -m $certbot_email -d $server_domain && uvicorn main:app --host 0.0.0.0 --port 8000"]
