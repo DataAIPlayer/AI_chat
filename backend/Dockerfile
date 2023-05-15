@@ -19,7 +19,7 @@ FROM python:3.9-slim
 # 安装 Nginx
 RUN apt-get update && \
     apt-get install -y nginx && \
-    apt-get install -y certbot certbot-nginx && \
+    apt-get install -y certbot python3-certbot-nginx && \
     apt-get install -y gettext && \
     rm -rf /var/lib/apt/lists/*
 
