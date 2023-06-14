@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from typing import List
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
+import aiomysql
 
 app = FastAPI()
 
@@ -20,6 +21,14 @@ class message(BaseModel):
     sender:str
 
 executor = ThreadPoolExecutor(max_workers=4)
+
+# 创建数据库连接池
+async def create_db_pool():
+    loop = asyncio.get_event_loop()
+    pool = await aiomysql.create_pool(host='127.0.0.1', port=3306,
+                                      user='root', password='pass',
+                                      db='chat', loop=loop)
+    return pool
 
 def chat(mess, model = "gpt-3.5-turbo-0301", stream=False):
     openai.api_key = openai_api_key
@@ -66,6 +75,7 @@ async def gpt_stream_chat(mess: List[message]):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+    pool = await create_db_pool()
     try:
         while True:
             data = await websocket.receive_text()
@@ -80,10 +90,23 @@ async def websocket_endpoint(websocket: WebSocket):
 
             resp_gen = await resp_future
 
+            ret = ''
+
             # 从响应生成器中获取值并生成
             for resp in resp_gen:
                 role = resp["choices"][0]["delta"].get("role", 'assistant')
                 token = resp["choices"][0]["delta"].get("content", "")
+                ret += token
                 await websocket.send_text(json.dumps(token))
+
+            data += [{'msg': ret, 'sender': 'assistant'}]
+            data = json.dumps(data)
+            try:
+                async with pool.acquire() as conn:
+                    async with conn.cursor() as cur:
+                        await cur.execute("INSERT INTO user_qa (qa) VALUES (%s)", data)
+                        await conn.commit()
+            except Exception as e:
+                print(f"Database error: {e}")
     except WebSocketDisconnect:
         await websocket.close()
