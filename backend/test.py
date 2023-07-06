@@ -5,6 +5,7 @@ import json
 import asyncio
 import websockets
 import sys
+import openai
 
 your_domain = sys.argv[1]
 
@@ -13,6 +14,23 @@ chat_link = f'https://{your_domain}/chat'
 stream_link = f'https://{your_domain}/stream_chat'
 
 ws_link = f"wss://{your_domain}/ws"
+
+# azure openai
+def chat(model = "gpt35-16k"):
+    openai.api_type = "azure"
+    openai.api_key = "..."
+    openai.api_base = your_domain
+    openai.api_version = "2023-05-15"
+    messages = [{"role":"system","content":"You are an AI assistant that helps people find information."}, {'content':'介绍一下你自己', 'role':'user'}]
+    completion = openai.ChatCompletion.create(
+    deployment_id = model,
+    messages = messages,
+    stream=True
+    )
+    for resp in completion:
+        role = resp["choices"][0]["delta"].get("role", 'assistant')
+        token = resp["choices"][0]["delta"].get("content", "")
+        print(token, flush=True)
 
 def test_https():
     headers = {'Content-type': 'application/json'}
@@ -53,4 +71,5 @@ async def test_connect():
 # 运行测试函数
 if __name__ == "__main__":
     # test_https()
-    asyncio.get_event_loop().run_until_complete(test_connect())
+    # asyncio.get_event_loop().run_until_complete(test_connect())
+    chat()

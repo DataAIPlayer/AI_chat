@@ -14,7 +14,12 @@ import aiomysql
 
 app = FastAPI()
 
+# openai
 openai_api_key=os.environ['OPENAI_API_KEY']
+
+# azure openai
+azure_endpoint = os.environ['AZURE_ENDPOINT']
+azure_key = os.environ['AZURE_KEY']
 
 class message(BaseModel):
     msg:str
@@ -30,8 +35,23 @@ async def create_db_pool():
                                       db='chat', loop=loop)
     return pool
 
+# openai chatgpt
 def chat(mess, model = "gpt-3.5-turbo-0301", stream=False):
     openai.api_key = openai_api_key
+    messages = [{"role": m.sender, "content": m.msg} for m in mess]
+    completion = openai.ChatCompletion.create(
+    model = model,
+    messages = messages,
+    stream=stream
+    )
+    return completion
+
+# azure openai chatgpt
+def azure_chat(mess, model="gpt35-16k", stream=False):
+    openai.api_type = "azure"
+    openai.api_key = azure_key
+    openai.api_base = azure_endpoint
+    openai.api_version = "2023-05-15"
     messages = [{"role": m.sender, "content": m.msg} for m in mess]
     completion = openai.ChatCompletion.create(
     model = model,
@@ -86,7 +106,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # 获取一个事件循环
             loop = asyncio.get_event_loop()
             # 在另一个线程中运行 openai.ChatCompletion.create() 方法
-            resp_future = loop.run_in_executor(executor, chat, mess, "gpt-3.5-turbo-0301", True)
+            resp_future = loop.run_in_executor(executor, azure_chat, mess, "gpt35-16k", True)
 
             resp_gen = await resp_future
 
