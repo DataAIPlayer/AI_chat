@@ -54,7 +54,7 @@ def azure_chat(mess, model="gpt35-16k", stream=False):
     openai.api_version = "2023-05-15"
     messages = [{"role": m.sender, "content": m.msg} for m in mess]
     completion = openai.ChatCompletion.create(
-    model = model,
+    deployment_id = model,
     messages = messages,
     stream=stream
     )
